@@ -51,4 +51,74 @@ If your Docker host is not using the IP address `192.168.99.100` you can find ou
 
 this will return the IP address of your Docker Host. This assumes your Docker host is called `default`.
 
+#A Stack in Docker Cloud
+##Running the web site
+To run the web site in the cloud we need to define a stack and in it a `Stackfile`. Our file looks like this
 
+```
+web:
+  image: 'clearmeasure/adnug-docker-sample:v1'
+  deployment_strategy: high_availability
+  restart: always
+  ports:
+    - '5000:5000'
+```
+
+Note how we open port 5000 to the public to be able to access our web page from the internet.
+
+##High Availability
+To achieve high availability we need to scale out our web site. We want it to run on at least 3 nodes. But now we also need a load balancer. We can use HA Proxy for this.
+Our `Stackfile` now looks like this
+```
+lb:
+  image: 'dockercloud/haproxy:latest'
+  deployment_strategy: high_availability
+  links:
+    - web
+  ports:
+    - '80:80'
+  restart: always
+  roles:
+    - global
+web:
+  image: 'clearmeasure/adnug-docker-sample:v1.2'
+  deployment_strategy: high_availability
+  environment:
+    - NAME=Gabriel
+  restart: always
+  target_num_containers: 3
+```
+Note how the load balancer service `lb` has the role `global` assigned. This allows it to use the Docker Cloud API to get information about the running instances of our web site.
+Also note how we can configure environment variables. We assign a value to the `NAME` variable in the `web` service.
+
+##Blue-Green Deployment
+To achieve zero downtime we need to have non-destructive deployment (also called blue-green deployment).
+Our `Stackfile` now looks like this
+
+```
+lb:
+  image: 'dockercloud/haproxy:latest'
+  deployment_strategy: high_availability
+  links:
+    - web-blue
+  ports:
+    - '80:80'
+  restart: always
+  roles:
+    - global
+web-blue:
+  image: 'clearmeasure/adnug-docker-sample:v1.2'
+  deployment_strategy: high_availability
+  environment:
+    - NAME=Gabriel
+  restart: always
+  target_num_containers: 3
+web-green:
+  image: 'clearmeasure/adnug-docker-sample:v1.2'
+  deployment_strategy: high_availability
+  environment:
+    - NAME=Gabriel
+  restart: always
+```
+
+Note how the load balancer service `lb` is linked to the blue version of the website.

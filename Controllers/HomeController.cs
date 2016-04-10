@@ -18,6 +18,7 @@ namespace Adnug_Docker_Sample.Controllers
             ViewData["Message"] = "ADNUG Presentation";
             ViewData["HostName"] = Environment.GetEnvironmentVariable("HOSTNAME") ??
                 Environment.GetEnvironmentVariable("COMPUTERNAME");
+            ViewData["Name"] = Environment.GetEnvironmentVariable("NAME") ?? "unknown";
 
             return View();
         }

@@ -15,7 +15,9 @@ namespace Adnug_Docker_Sample.Controllers
 
         public IActionResult About()
         {
-            ViewData["Message"] = "Your application description page.";
+            ViewData["Message"] = "ADNUG Presentation";
+            ViewData["HostName"] = Environment.GetEnvironmentVariable("HOSTNAME") ??
+                Environment.GetEnvironmentVariable("COMPUTERNAME");
 
             return View();
         }
